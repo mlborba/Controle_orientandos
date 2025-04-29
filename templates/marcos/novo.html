@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Novo Marco - Sistema de Controle de Orientandos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Novo Marco</h1>
+    <a href="{{ url_for('listar_marcos') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left mr-1"></i> Voltar
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            <div class="form-group">
+                <label for="orientando_id">Orientando</label>
+                <select class="form-control" id="orientando_id" name="orientando_id" required>
+                    <option value="">Selecione um orientando</option>
+                    {% for orientando in orientandos %}
+                    <option value="{{ orientando.id }}">{{ orientando.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="tipo">Tipo de Marco</label>
+                <select class="form-control" id="tipo" name="tipo" required>
+                    <option value="">Selecione o tipo de marco</option>
+                    <option value="Seminário do 1º Semestre">Seminário do 1º Semestre</option>
+                    <option value="Seminário do 2º Semestre">Seminário do 2º Semestre</option>
+                    <option value="Qualificação">Qualificação</option>
+                    <option value="Defesa">Defesa</option>
+                    <option value="Outro">Outro</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="data_prevista">Data Prevista</label>
+                <input type="date" class="form-control" id="data_prevista" name="data_prevista" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="observacoes">Observações</label>
+                <textarea class="form-control" id="observacoes" name="observacoes" rows="3"></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Salvar</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

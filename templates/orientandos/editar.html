@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Orientando - Sistema de Controle de Orientandos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Editar Orientando</h1>
+    <a href="{{ url_for('visualizar_orientando', id=orientando.id) }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left mr-1"></i> Voltar
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            <div class="form-group">
+                <label for="nome">Nome Completo</label>
+                <input type="text" class="form-control" id="nome" name="nome" value="{{ orientando.nome }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" class="form-control" id="email" name="email" value="{{ orientando.email }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="telefone">Telefone</label>
+                <input type="text" class="form-control" id="telefone" name="telefone" value="{{ orientando.telefone }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="data_ingresso">Data de Ingresso</label>
+                <input type="date" class="form-control" id="data_ingresso" name="data_ingresso" value="{{ orientando.data_ingresso.strftime('%Y-%m-%d') }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="titulo_projeto">Título do Projeto</label>
+                <input type="text" class="form-control" id="titulo_projeto" name="titulo_projeto" value="{{ orientando.titulo_projeto }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="area_pesquisa">Área de Pesquisa</label>
+                <input type="text" class="form-control" id="area_pesquisa" name="area_pesquisa" value="{{ orientando.area_pesquisa }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select class="form-control" id="status" name="status" required>
+                    <option value="ativo" {% if orientando.status == 'ativo' %}selected{% endif %}>Ativo</option>
+                    <option value="inativo" {% if orientando.status == 'inativo' %}selected{% endif %}>Inativo</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="tipo">Tipo</label>
+                <select class="form-control" id="tipo" name="tipo" required onchange="toggleOrientadorPrincipal()">
+                    <option value="orientando" {% if orientando.tipo == 'orientando' %}selected{% endif %}>Orientando</option>
+                    <option value="coorientando" {% if orientando.tipo == 'coorientando' %}selected{% endif %}>Coorientando</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="orientador_principal_group" style="display: none;">
+                <label for="orientador_principal_id">Orientador Principal</label>
+                <select class="form-control" id="orientador_principal_id" name="orientador_principal_id">
+                    <option value="">Selecione o orientador principal</option>
+                    {% for orientando_disp in orientandos_disponiveis %}
+                    {% if orientando_disp.id != orientando.id %}
+                    <option value="{{ orientando_disp.id }}" {% if orientando.orientador_principal_id == orientando_disp.id %}selected{% endif %}>{{ orientando_disp.nome }}</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Salvar</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleOrientadorPrincipal() {
+        var tipo = document.getElementById('tipo').value;
+        var orientadorGroup = document.getElementById('orientador_principal_group');
+        
+        if (tipo === 'coorientando') {
+            orientadorGroup.style.display = 'block';
+            document.getElementById('orientador_principal_id').required = true;
+        } else {
+            orientadorGroup.style.display = 'none';
+            document.getElementById('orientador_principal_id').required = false;
+        }
+    }
+    
+    // Executar na carga da página
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleOrientadorPrincipal();
+    });
+</script>
+{% endblock %}

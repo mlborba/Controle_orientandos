@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Marcos - Sistema de Controle de Orientandos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Marcos</h1>
+    <a href="{{ url_for('novo_marco') }}" class="btn btn-primary">
+        <i class="fas fa-plus mr-1"></i> Novo Marco
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Orientando</th>
+                        <th>Tipo</th>
+                        <th>Data Prevista</th>
+                        <th>Data Realizada</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for marco in marcos %}
+                    <tr>
+                        <td>{{ marco.orientando.nome }}</td>
+                        <td>{{ marco.tipo }}</td>
+                        <td>{{ marco.data_prevista.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            {% if marco.data_realizada %}
+                            {{ marco.data_realizada.strftime('%d/%m/%Y') }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if marco.status == 'pendente' %}
+                            <span class="badge badge-warning">Pendente</span>
+                            {% elif marco.status == 'concluído' %}
+                            <span class="badge badge-success">Concluído</span>
+                            {% else %}
+                            <span class="badge badge-danger">Atrasado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('editar_marco', id=marco.id) }}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Orientação - Sistema de Controle de Orientandos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Editar Orientação</h1>
+    <a href="{{ url_for('visualizar_orientacao', id=orientacao.id) }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left mr-1"></i> Voltar
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            <div class="form-group">
+                <label for="orientando_id">Orientando</label>
+                <select class="form-control" id="orientando_id" name="orientando_id" required>
+                    <option value="">Selecione um orientando</option>
+                    {% for orientando in orientandos %}
+                    <option value="{{ orientando.id }}" {% if orientando.id == orientacao.orientando_id %}selected{% endif %}>{{ orientando.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="data">Data</label>
+                        <input type="date" class="form-control" id="data" name="data" value="{{ orientacao.data_hora.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="hora">Hora</label>
+                        <input type="time" class="form-control" id="hora" name="hora" value="{{ orientacao.data_hora.strftime('%H:%M') }}" required>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="duracao_prevista">Duração Prevista (minutos)</label>
+                <input type="number" class="form-control" id="duracao_prevista" name="duracao_prevista" value="{{ orientacao.duracao_prevista }}" min="15" step="15" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select class="form-control" id="status" name="status" required>
+                    <option value="agendada" {% if orientacao.status == 'agendada' %}selected{% endif %}>Agendada</option>
+                    <option value="realizada" {% if orientacao.status == 'realizada' %}selected{% endif %}>Realizada</option>
+                    <option value="cancelada" {% if orientacao.status == 'cancelada' %}selected{% endif %}>Cancelada</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="modalidade">Modalidade</label>
+                <select class="form-control" id="modalidade" name="modalidade" required onchange="toggleLocal()">
+                    <option value="presencial" {% if orientacao.modalidade == 'presencial' %}selected{% endif %}>Presencial</option>
+                    <option value="online" {% if orientacao.modalidade == 'online' %}selected{% endif %}>Online</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="local" id="label_local">Local</label>
+                <input type="text" class="form-control" id="local" name="local" value="{{ orientacao.local }}" required>
+                <small class="form-text text-muted" id="local_help">Informe a sala ou local da orientação.</small>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Salvar</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleLocal() {
+        var modalidade = document.getElementById('modalidade').value;
+        var labelLocal = document.getElementById('label_local');
+        var localHelp = document.getElementById('local_help');
+        
+        if (modalidade === 'online') {
+            labelLocal.textContent = 'Link';
+            localHelp.textContent = 'Informe o link da videoconferência.';
+        } else {
+            labelLocal.textContent = 'Local';
+            localHelp.textContent = 'Informe a sala ou local da orientação.';
+        }
+    }
+    
+    // Executar na carga da página
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleLocal();
+    });
+</script>
+{% endblock %}

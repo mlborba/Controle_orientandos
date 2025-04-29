@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Orientandos - Sistema de Controle de Orientandos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Orientandos</h1>
+    <a href="{{ url_for('novo_orientando') }}" class="btn btn-primary">
+        <i class="fas fa-plus mr-1"></i> Novo Orientando
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Tipo</th>
+                        <th>Área de Pesquisa</th>
+                        <th>Data de Ingresso</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for orientando in orientandos %}
+                    <tr>
+                        <td>{{ orientando.nome }}</td>
+                        <td>
+                            {% if orientando.tipo == 'orientando' %}
+                            <span class="badge badge-primary">Orientando</span>
+                            {% else %}
+                            <span class="badge badge-success">Coorientando</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ orientando.area_pesquisa }}</td>
+                        <td>{{ orientando.data_ingresso.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            {% if orientando.status == 'ativo' %}
+                            <span class="badge badge-success">Ativo</span>
+                            {% else %}
+                            <span class="badge badge-secondary">Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('visualizar_orientando', id=orientando.id) }}" class="btn btn-sm btn-info">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ url_for('editar_orientando', id=orientando.id) }}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

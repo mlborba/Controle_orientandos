@@ -1,0 +1,355 @@
+/* Estilos gerais */
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f5f5f5;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Cabeçalho */
+.navbar {
+    background-color: #2c3e50;
+    color: white;
+    padding: 15px 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.8);
+    transition: color 0.3s;
+}
+
+.navbar-nav .nav-link:hover {
+    color: white;
+}
+
+/* Cards e Painéis */
+.card {
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    border: none;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    font-weight: bold;
+    padding: 15px 20px;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+/* Botões */
+.btn-primary {
+    background-color: #3498db;
+    border-color: #3498db;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+}
+
+.btn-success {
+    background-color: #2ecc71;
+    border-color: #2ecc71;
+}
+
+.btn-success:hover {
+    background-color: #27ae60;
+    border-color: #27ae60;
+}
+
+.btn-danger {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+    border-color: #c0392b;
+}
+
+/* Formulários */
+.form-control {
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    padding: 10px 15px;
+}
+
+.form-control:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+/* Tabelas */
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: #212529;
+    border-collapse: collapse;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    border-top: none;
+}
+
+.table td, .table th {
+    padding: 12px 15px;
+    vertical-align: middle;
+    border-top: 1px solid #dee2e6;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Alertas e notificações */
+.alert {
+    border-radius: 4px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+}
+
+/* Badges e status */
+.badge {
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.badge-primary {
+    background-color: #3498db;
+}
+
+.badge-success {
+    background-color: #2ecc71;
+}
+
+.badge-warning {
+    background-color: #f39c12;
+    color: white;
+}
+
+.badge-danger {
+    background-color: #e74c3c;
+}
+
+/* Dashboard */
+.dashboard-stats {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -10px;
+}
+
+.stat-card {
+    flex: 1;
+    min-width: 200px;
+    margin: 10px;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.stat-card h3 {
+    margin-top: 0;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.stat-card p {
+    margin-bottom: 0;
+    color: #7f8c8d;
+}
+
+.stat-orientandos {
+    background-color: #3498db;
+    color: white;
+}
+
+.stat-coorientandos {
+    background-color: #2ecc71;
+    color: white;
+}
+
+.stat-orientacoes {
+    background-color: #9b59b6;
+    color: white;
+}
+
+.stat-marcos {
+    background-color: #f39c12;
+    color: white;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .dashboard-stats {
+        flex-direction: column;
+    }
+    
+    .stat-card {
+        margin: 5px 0;
+    }
+    
+    .container {
+        padding: 10px;
+    }
+}
+
+/* Status específicos */
+.status-pendente {
+    color: #f39c12;
+}
+
+.status-concluido {
+    color: #2ecc71;
+}
+
+.status-atrasado {
+    color: #e74c3c;
+}
+
+.status-agendada {
+    color: #3498db;
+}
+
+.status-realizada {
+    color: #2ecc71;
+}
+
+.status-cancelada {
+    color: #e74c3c;
+}
+
+/* Perfil de orientando */
+.perfil-orientando {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.info-orientando {
+    flex: 2;
+    min-width: 300px;
+}
+
+.timeline-orientando {
+    flex: 1;
+    min-width: 250px;
+    margin-left: 20px;
+}
+
+@media (max-width: 768px) {
+    .perfil-orientando {
+        flex-direction: column;
+    }
+    
+    .timeline-orientando {
+        margin-left: 0;
+        margin-top: 20px;
+    }
+}
+
+/* Timeline */
+.timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 20px;
+    width: 2px;
+    background-color: #e9ecef;
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 50px;
+    margin-bottom: 20px;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #3498db;
+    border: 3px solid white;
+}
+
+.timeline-item.concluido::before {
+    background-color: #2ecc71;
+}
+
+.timeline-item.atrasado::before {
+    background-color: #e74c3c;
+}
+
+.timeline-date {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+}
+
+.timeline-content {
+    padding: 10px 15px;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Login */
+.login-container {
+    max-width: 400px;
+    margin: 100px auto;
+    padding: 30px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.login-logo {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-logo h1 {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.login-form .form-group {
+    margin-bottom: 25px;
+}
+
+.login-form .btn {
+    width: 100%;
+    padding: 12px;
+}

@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ orientando.nome }} - Sistema de Controle de Orientandos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ orientando.nome }}</h1>
+    <div>
+        <a href="{{ url_for('editar_orientando', id=orientando.id) }}" class="btn btn-warning">
+            <i class="fas fa-edit mr-1"></i> Editar
+        </a>
+        <a href="{{ url_for('listar_orientandos') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left mr-1"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-user mr-2"></i> Informações do Orientando
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Email:</strong> {{ orientando.email }}</p>
+                        <p><strong>Telefone:</strong> {{ orientando.telefone or 'Não informado' }}</p>
+                        <p><strong>Data de Ingresso:</strong> {{ orientando.data_ingresso.strftime('%d/%m/%Y') }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p>
+                            <strong>Tipo:</strong> 
+                            {% if orientando.tipo == 'orientando' %}
+                            <span class="badge badge-primary">Orientando</span>
+                            {% else %}
+                            <span class="badge badge-success">Coorientando</span>
+                            {% endif %}
+                        </p>
+                        <p>
+                            <strong>Status:</strong>
+                            {% if orientando.status == 'ativo' %}
+                            <span class="badge badge-success">Ativo</span>
+                            {% else %}
+                            <span class="badge badge-secondary">Inativo</span>
+                            {% endif %}
+                        </p>
+                        {% if orientando.tipo == 'coorientando' and orientando.orientador_principal_id %}
+                        <p><strong>Orientador Principal:</strong> {{ orientando.orientador_principal.nome }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <hr>
+                <h5>Projeto</h5>
+                <p><strong>Título:</strong> {{ orientando.titulo_projeto }}</p>
+                <p><strong>Área de Pesquisa:</strong> {{ orientando.area_pesquisa or 'Não informada' }}</p>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-calendar-alt mr-2"></i> Orientações</span>
+                <a href="{{ url_for('nova_orientacao') }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus"></i> Nova Orientação
+                </a>
+            </div>
+            <div class="card-body">
+                {% if orientacoes %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Modalidade</th>
+                                <th>Status</th>
+                                <th>Diário</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for orientacao in orientacoes %}
+                            <tr>
+                                <td>{{ orientacao.data_hora.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>{{ orientacao.modalidade }}</td>
+                                <td>
+                                    {% if orientacao.status == 'agendada' %}
+                                    <span class="badge badge-primary">Agendada</span>
+                                    {% elif orientacao.status == 'realizada' %}
+                                    <span class="badge badge-success">Realizada</span>
+                                    {% else %}
+                                    <span class="badge badge-danger">Cancelada</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if orientacao.diario %}
+                                    <span class="badge badge-success">Registrado</span>
+                                    {% else %}
+                                    <span class="badge badge-secondary">Não registrado</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('visualizar_orientacao', id=orientacao.id) }}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if orientacao.status == 'agendada' %}
+                                    <a href="{{ url_for('registrar_diario', id=orientacao.id) }}" class="btn btn-sm btn-success">
+                                        <i class="fas fa-book"></i>
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">Não há orientações registradas para este orientando.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-flag mr-2"></i> Marcos</span>
+                <a href="{{ url_for('novo_marco') }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus"></i> Novo Marco
+                </a>
+            </div>
+            <div class="card-body">
+                {% if marcos %}
+                <div class="timeline">
+                    {% for marco in marcos %}
+                    <div class="timeline-item {{ marco.status }}">
+                        <div class="timeline-date">
+                            {% if marco.data_realizada %}
+                            Realizado em {{ marco.data_realizada.strftime('%d/%m/%Y') }}
+                            {% else %}
+                            Previsto para {{ marco.data_prevista.strftime('%d/%m/%Y') }}
+                            {% endif %}
+                        </div>
+                        <div class="timeline-content">
+                            <h5>{{ marco.tipo }}</h5>
+                            <p>
+                                Status: 
+                                {% if marco.status == 'pendente' %}
+                                <span class="status-pendente">Pendente</span>
+                                {% elif marco.status == 'concluído' %}
+                                <span class="status-concluido">Concluído</span>
+                                {% else %}
+                                <span class="status-atrasado">Atrasado</span>
+                                {% endif %}
+                            </p>
+                            {% if marco.observacoes %}
+                            <p><small>{{ marco.observacoes }}</small></p>
+                            {% endif %}
+                            <a href="{{ url_for('editar_marco', id=marco.id) }}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">Não há marcos registrados para este orientando.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
