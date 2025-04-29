@@ -477,5 +477,27 @@ def create_tables_and_admin():
         db.session.add(admin)
         db.session.commit()
 
+@app.route("/init-db-manual")
+def init_db_manual():
+    try:
+        with app.app_context():
+            db.create_all()
+            # Opcional: Criar admin se não existir (pode ser feito aqui)
+            admin = Usuario.query.filter_by(username='admin').first()
+            if not admin:
+                admin = Usuario(
+                    username='admin',
+                    nome='Administrador',
+                    email='admin@example.com'
+                )
+                admin.set_password('admin123')
+                db.session.add(admin)
+                db.session.commit()
+                return "Banco de dados inicializado e admin criado (se não existia)!"
+            else:
+                return "Banco de dados inicializado (admin já existia)!"
+    except Exception as e:
+        return f"Erro ao inicializar DB: {str(e)}"
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
