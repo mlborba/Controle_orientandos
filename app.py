@@ -477,9 +477,6 @@ def create_tables_and_admin():
         db.session.add(admin)
         db.session.commit()
 
-# Inicializar o banco de dados dentro de um contexto de aplicação
-with app.app_context():
-    create_tables_and_admin()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
