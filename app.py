@@ -10,7 +10,8 @@ from dateutil.relativedelta import relativedelta
 app = Flask(__name__)
 app.instance_path = '/tmp/instance'
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24))
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:////tmp/orientacao.db')
+# Usar DATABASE_URL do ambiente (Vercel) ou um padrão local (opcional)
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///local_dev.db")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Inicialização do banco de dados
