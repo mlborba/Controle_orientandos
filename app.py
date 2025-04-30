@@ -483,6 +483,7 @@ def create_tables_and_admin():
 def init_db_manual():
     try:
         with app.app_context():
+            db.drop_all()
             db.create_all()
             # Opcional: Criar admin se não existir (pode ser feito aqui)
             admin = Usuario.query.filter_by(username='admin').first()
