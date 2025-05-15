@@ -8,6 +8,7 @@ from dateutil.relativedelta import relativedelta
 
 # Configuração do aplicativo
 app = Flask(__name__)
+app.instance_path = '/tmp/instance_orientacao'
 app.config['SECRET_KEY'] = os.urandom(24)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///orientacao.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
