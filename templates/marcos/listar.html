@@ -47,9 +47,14 @@
                             {% endif %}
                         </td>
                         <td>
-                            <a href="{{ url_for('editar_marco', id=marco.id) }}" class="btn btn-sm btn-warning">
+                            <a href="{{ url_for('editar_marco', id=marco.id) }}" class="btn btn-sm btn-warning" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </a>
+                            <form action="{{ url_for('excluir_marco', id=marco.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este marco? Esta ação não pode ser desfeita.');">
+                                <button type="submit" class="btn btn-sm btn-danger" title="Excluir">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     {% endfor %}

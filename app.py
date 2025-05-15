@@ -8,10 +8,8 @@ from dateutil.relativedelta import relativedelta
 
 # Configuração do aplicativo
 app = Flask(__name__)
-app.instance_path = '/tmp/instance'
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24))
-# Usar DATABASE_URL do ambiente (Vercel) ou um padrão local (opcional)
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///local_dev.db")
+app.config['SECRET_KEY'] = os.urandom(24)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///orientacao.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Inicialização do banco de dados
@@ -26,7 +24,7 @@ login_manager.login_view = 'login'
 class Usuario(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256), nullable=False) # Aumentado para 256
+    password_hash = db.Column(db.String(128))
     nome = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     
@@ -160,8 +158,7 @@ def dashboard():
         coorientandos=coorientandos,
         proximas_orientacoes=proximas_orientacoes,
         proximos_marcos=proximos_marcos,
-        marcos_atrasados=marcos_atrasados,
-        now=hoje
+        marcos_atrasados=marcos_atrasados
     )
 
 # Rotas para Orientandos
@@ -456,15 +453,10 @@ def registrar_diario(id):
     
     return render_template('orientacoes/registrar_diario.html', orientacao=orientacao, diario=diario)
 
-# Filtro para converter quebras de linha em HTML
-@app.template_filter('nl2br')
-def nl2br(value):
-    if value:
-        return value.replace('\n', '<br>')
-    return value
-
-# Função para inicializar o banco de dados e criar usuário admin
-def create_tables_and_admin():
+# Inicialização do banco de dados
+@app.cli.command('init-db')
+def init_db_command():
+    """Inicializa o banco de dados."""
     db.create_all()
     
     # Criar usuário administrador se não existir
@@ -478,29 +470,67 @@ def create_tables_and_admin():
         admin.set_password('admin123')
         db.session.add(admin)
         db.session.commit()
-
-@app.route("/init-db-manual")
-def init_db_manual():
-    try:
-        with app.app_context():
-            db.drop_all()
-            db.create_all()
-            # Opcional: Criar admin se não existir (pode ser feito aqui)
-            admin = Usuario.query.filter_by(username='admin').first()
-            if not admin:
-                admin = Usuario(
-                    username='admin',
-                    nome='Administrador',
-                    email='admin@example.com'
-                )
-                admin.set_password('admin123')
-                db.session.add(admin)
-                db.session.commit()
-                return "Banco de dados inicializado e admin criado (se não existia)!"
-            else:
-                return "Banco de dados inicializado (admin já existia)!"
-    except Exception as e:
-        return f"Erro ao inicializar DB: {str(e)}"
+    
+    print('Banco de dados inicializado.')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    with app.app_context():
+        db.create_all()
+        # Criar usuário administrador se não existir
+        admin = Usuario.query.filter_by(username='admin').first()
+        if not admin:
+            admin = Usuario(
+                username='admin',
+                nome='Administrador',
+                email='admin@example.com'
+            )
+            admin.set_password('admin123')
+            db.session.add(admin)
+            db.session.commit()
+            print('Usuário administrador criado.')
+    
+    app.run(host='0.0.0.0', port=5000, debug=True)
+
+# Adicionar rota para excluir marco
+@app.route('/marcos/<int:id>/excluir', methods=['POST'])
+@login_required
+def excluir_marco(id):
+    marco = Marco.query.get_or_404(id)
+    try:
+        db.session.delete(marco)
+        db.session.commit()
+        flash('Marco excluído com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao excluir o marco: {str(e)}', 'danger')
+    return redirect(url_for('listar_marcos'))
+
+# Adicionar rota para excluir orientando (revisão e garantia)
+@app.route('/orientandos/<int:id>/excluir', methods=['POST'])
+@login_required
+def excluir_orientando(id):
+    orientando = Orientando.query.get_or_404(id)
+    
+    # Verificar se o orientando é orientador principal de algum coorientando
+    coorientandos_associados = Orientando.query.filter_by(orientador_principal_id=id).count()
+    if coorientandos_associados > 0:
+        flash('Não é possível excluir este orientando, pois ele é orientador principal de um ou mais coorientandos. Remova a associação primeiro.', 'danger')
+        return redirect(url_for('listar_orientandos'))
+        
+    try:
+        # Excluir marcos associados
+        Marco.query.filter_by(orientando_id=id).delete()
+        # Excluir diários de orientação associados (indireto, via orientação)
+        orientacoes = Orientacao.query.filter_by(orientando_id=id).all()
+        for orientacao in orientacoes:
+            DiarioOrientacao.query.filter_by(orientacao_id=orientacao.id).delete()
+        # Excluir orientações associadas
+        Orientacao.query.filter_by(orientando_id=id).delete()
+        
+        db.session.delete(orientando)
+        db.session.commit()
+        flash('Orientando e todos os seus dados relacionados foram excluídos com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao excluir o orientando: {str(e)}', 'danger')
+    return redirect(url_for('listar_orientandos'))
