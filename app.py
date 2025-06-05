@@ -10,7 +10,18 @@ from dateutil.relativedelta import relativedelta
 app = Flask(__name__)
 app.instance_path = '/tmp/instance_orientacao'
 app.config['SECRET_KEY'] = os.urandom(24)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///local_dev.db')
+# Substitua a linha atual de configuração do banco de dados por:
+database_url = os.environ.get('DATABASE_URL')
+if not database_url:
+    # Fallback para SQLite apenas em desenvolvimento local
+    database_url = 'sqlite:////tmp/instance_orientacao/orientacao.db'
+    print("AVISO: Usando SQLite local. Para produção, configure DATABASE_URL.")
+else:
+    print(f"Usando banco de dados configurado via DATABASE_URL")
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+print(f"URL do banco de dados configurada: {app.config['SQLALCHEMY_DATABASE_URI']}")
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Inicialização do banco de dados
