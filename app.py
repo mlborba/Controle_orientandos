@@ -455,24 +455,33 @@ def registrar_diario(id):
     return render_template('orientacoes/registrar_diario.html', orientacao=orientacao, diario=diario)
 
 # Inicialização do banco de dados
-@app.cli.command('init-db')
-def init_db_command():
-    """Inicializa o banco de dados."""
-    db.create_all()
-    
-    # Criar usuário administrador se não existir
-    admin = Usuario.query.filter_by(username='admin').first()
-    if not admin:
-        admin = Usuario(
-            username='admin',
-            nome='Administrador',
-            email='admin@example.com'
-        )
-        admin.set_password('admin123')
-        db.session.add(admin)
-        db.session.commit()
-    
-    print('Banco de dados inicializado.')
+@app.route("/init-db-manual")
+def init_db_manual():
+    try:
+        with app.app_context():
+            print("Tentando criar tabelas...")
+            db.create_all()
+            print("Tabelas criadas. Tentando criar admin...")
+            
+            # Criar usuário administrador se não existir
+            admin = Usuario.query.filter_by(username="admin").first()
+            if not admin:
+                admin = Usuario(
+                    username="admin",
+                    nome="Administrador",
+                    email="admin@example.com",
+                )
+                admin.set_password("admin123")
+                db.session.add(admin)
+                db.session.commit()
+                print("Admin criado.")
+                return "Banco de dados inicializado e admin criado!"
+            else:
+                print("Admin já existia.")
+                return "Banco de dados inicializado (admin já existia)!"
+    except Exception as e:
+        print(f"Erro no init_db_manual: {str(e)}")
+        return f"Erro ao inicializar DB: {str(e)}"
 
 if __name__ == '__main__':
     with app.app_context():
