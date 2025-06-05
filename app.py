@@ -141,37 +141,46 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    # Contagem de orientandos por tipo
-    orientandos = Orientando.query.filter_by(tipo='orientando', status='ativo').count()
-    coorientandos = Orientando.query.filter_by(tipo='coorientando', status='ativo').count()
-    
-    # Próximas orientações
-    hoje = datetime.now()
-    proximas_orientacoes = Orientacao.query.filter(
-        Orientacao.data_hora >= hoje,
-        Orientacao.status == 'agendada'
-    ).order_by(Orientacao.data_hora).limit(5).all()
-    
-    # Próximos marcos
-    proximos_marcos = Marco.query.filter(
-        Marco.data_prevista >= hoje.date(),
-        Marco.status == 'pendente'
-    ).order_by(Marco.data_prevista).limit(5).all()
-    
-    # Marcos atrasados
-    marcos_atrasados = Marco.query.filter(
-        Marco.data_prevista < hoje.date(),
-        Marco.status == 'pendente'
-    ).order_by(Marco.data_prevista).all()
-    
-    return render_template(
-        'dashboard.html',
-        orientandos=orientandos,
-        coorientandos=coorientandos,
-        proximas_orientacoes=proximas_orientacoes,
-        proximos_marcos=proximos_marcos,
-        marcos_atrasados=marcos_atrasados
-    )
+    try:
+        # Contagem de orientandos por tipo
+        orientandos = Orientando.query.filter_by(tipo='orientando', status='ativo').count()
+        coorientandos = Orientando.query.filter_by(tipo='coorientando', status='ativo').count()
+        
+        # Próximas orientações
+        hoje = datetime.now()
+        proximas_orientacoes = Orientacao.query.filter(
+            Orientacao.data_hora >= hoje,
+            Orientacao.status == 'agendada'
+        ).order_by(Orientacao.data_hora).limit(5).all()
+        
+        # Próximos marcos
+        proximos_marcos = Marco.query.filter(
+            Marco.data_prevista >= hoje.date(),
+            Marco.status == 'pendente'
+        ).order_by(Marco.data_prevista).limit(5).all()
+        
+        # Marcos atrasados
+        marcos_atrasados = Marco.query.filter(
+            Marco.data_prevista < hoje.date(),
+            Marco.status == 'pendente'
+        ).order_by(Marco.data_prevista).all()
+        
+        return render_template(
+            'dashboard.html',
+            orientandos=orientandos,
+            coorientandos=coorientandos,
+            proximas_orientacoes=proximas_orientacoes,
+            proximos_marcos=proximos_marcos,
+            marcos_atrasados=marcos_atrasados
+        )
+    except Exception as e:
+        # Log detalhado do erro
+        import traceback
+        app.logger.error(f"Erro no dashboard: {str(e)}")
+        app.logger.error(traceback.format_exc())
+        
+        # Retornar uma página de erro mais amigável
+        return render_template('login.html', error="Erro ao carregar o dashboard. Por favor, tente novamente mais tarde.")
 
 # Rotas para Orientandos
 @app.route('/orientandos')
