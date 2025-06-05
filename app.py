@@ -142,12 +142,14 @@ def logout():
 @login_required
 def dashboard():
     try:
+        # Adicione esta linha para definir 'now'
+        hoje = datetime.now()
+        
         # Contagem de orientandos por tipo
         orientandos = Orientando.query.filter_by(tipo='orientando', status='ativo').count()
         coorientandos = Orientando.query.filter_by(tipo='coorientando', status='ativo').count()
         
         # Próximas orientações
-        hoje = datetime.now()
         proximas_orientacoes = Orientacao.query.filter(
             Orientacao.data_hora >= hoje,
             Orientacao.status == 'agendada'
@@ -171,7 +173,8 @@ def dashboard():
             coorientandos=coorientandos,
             proximas_orientacoes=proximas_orientacoes,
             proximos_marcos=proximos_marcos,
-            marcos_atrasados=marcos_atrasados
+            marcos_atrasados=marcos_atrasados,
+            now=hoje  # Adicione esta linha para passar 'now' para o template
         )
     except Exception as e:
         # Log detalhado do erro
