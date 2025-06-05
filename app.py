@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta  # Certifique-se que este import existe
 import os
 from dateutil.relativedelta import relativedelta
 
@@ -10,6 +10,14 @@ from dateutil.relativedelta import relativedelta
 app = Flask(__name__)
 app.instance_path = '/tmp/instance_orientacao'
 app.config['SECRET_KEY'] = os.urandom(24)
+# Adicione estas linhas logo após a configuração do SECRET_KEY no app.py:
+
+# Configuração mais robusta para sessões
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
+app.config['SESSION_PERMANENT'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Sessão válida por 7 dias
+
 # Substitua a linha atual de configuração do banco de dados por:
 database_url = os.environ.get('DATABASE_URL')
 if not database_url:
@@ -126,9 +134,10 @@ def login():
         
         if user and user.check_password(password):
             login_user(user)
+            session.permanent = True  # Torna a sessão permanente
             return redirect(url_for('dashboard'))
-        
-        flash('Usuário ou senha inválidos')
+        else:
+            flash('Usuário ou senha inválidos', 'danger')
     
     return render_template('login.html')
 
