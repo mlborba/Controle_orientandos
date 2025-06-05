@@ -196,13 +196,11 @@ def dashboard():
 
 # Rotas para Orientandos
 @app.route('/orientandos')
-@login_required
 def listar_orientandos():
     orientandos = Orientando.query.all()
     return render_template('orientandos/listar.html', orientandos=orientandos)
 
 @app.route('/orientandos/novo', methods=['GET', 'POST'])
-@login_required
 def novo_orientando():
     if request.method == 'POST':
         nome = request.form.get('nome')
@@ -283,7 +281,6 @@ def novo_orientando():
     return render_template('orientandos/novo.html', orientandos_disponiveis=orientandos_disponiveis)
 
 @app.route('/orientandos/<int:id>')
-@login_required
 def visualizar_orientando(id):
     orientando = Orientando.query.get_or_404(id)
     marcos = Marco.query.filter_by(orientando_id=id).order_by(Marco.data_prevista).all()
@@ -297,7 +294,6 @@ def visualizar_orientando(id):
     )
 
 @app.route('/orientandos/<int:id>/editar', methods=['GET', 'POST'])
-@login_required
 def editar_orientando(id):
     orientando = Orientando.query.get_or_404(id)
     
@@ -326,13 +322,11 @@ def editar_orientando(id):
 
 # Rotas para Marcos
 @app.route('/marcos')
-@login_required
 def listar_marcos():
     marcos = Marco.query.order_by(Marco.data_prevista).all()
     return render_template('marcos/listar.html', marcos=marcos)
 
 @app.route('/marcos/novo', methods=['GET', 'POST'])
-@login_required
 def novo_marco():
     if request.method == 'POST':
         orientando_id = request.form.get('orientando_id')
@@ -357,7 +351,6 @@ def novo_marco():
     return render_template('marcos/novo.html', orientandos=orientandos)
 
 @app.route('/marcos/<int:id>/editar', methods=['GET', 'POST'])
-@login_required
 def editar_marco(id):
     marco = Marco.query.get_or_404(id)
     
@@ -389,13 +382,11 @@ def editar_marco(id):
 
 # Rotas para Orientações
 @app.route('/orientacoes')
-@login_required
 def listar_orientacoes():
     orientacoes = Orientacao.query.order_by(Orientacao.data_hora.desc()).all()
     return render_template('orientacoes/listar.html', orientacoes=orientacoes)
 
 @app.route('/orientacoes/nova', methods=['GET', 'POST'])
-@login_required
 def nova_orientacao():
     if request.method == 'POST':
         orientando_id = request.form.get('orientando_id')
@@ -424,13 +415,11 @@ def nova_orientacao():
     return render_template('orientacoes/nova.html', orientandos=orientandos)
 
 @app.route('/orientacoes/<int:id>')
-@login_required
 def visualizar_orientacao(id):
     orientacao = Orientacao.query.get_or_404(id)
     return render_template('orientacoes/visualizar.html', orientacao=orientacao)
 
 @app.route('/orientacoes/<int:id>/editar', methods=['GET', 'POST'])
-@login_required
 def editar_orientacao(id):
     orientacao = Orientacao.query.get_or_404(id)
     
@@ -452,7 +441,6 @@ def editar_orientacao(id):
     return render_template('orientacoes/editar.html', orientacao=orientacao, orientandos=orientandos)
 
 @app.route('/orientacoes/<int:id>/registrar', methods=['GET', 'POST'])
-@login_required
 def registrar_diario(id):
     orientacao = Orientacao.query.get_or_404(id)
     
