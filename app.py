@@ -10,7 +10,7 @@ from dateutil.relativedelta import relativedelta
 app = Flask(__name__)
 app.instance_path = '/tmp/instance_orientacao'
 app.config['SECRET_KEY'] = os.urandom(24)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///orientacao.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///local_dev.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Inicialização do banco de dados
@@ -25,7 +25,7 @@ login_manager.login_view = 'login'
 class Usuario(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128))
+    password_hash = db.Column(db.String(256))  # Aumentado para 256 caracteres
     nome = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     
