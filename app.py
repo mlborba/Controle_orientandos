@@ -514,7 +514,7 @@ if __name__ == '__main__':
                 nome='Administrador',
                 email='admin@example.com'
             )
-            admin.set_password('admin123')
+            admin.set_password('Latierra010765')
             db.session.add(admin)
             db.session.commit()
             print('Usuário administrador criado.')
@@ -523,7 +523,6 @@ if __name__ == '__main__':
 
 # Adicionar rota para excluir marco
 @app.route('/marcos/<int:id>/excluir', methods=['POST'])
-@login_required
 def excluir_marco(id):
     marco = Marco.query.get_or_404(id)
     try:
@@ -537,7 +536,6 @@ def excluir_marco(id):
 
 # Adicionar rota para excluir orientando (revisão e garantia)
 @app.route('/orientandos/<int:id>/excluir', methods=['POST'])
-@login_required
 def excluir_orientando(id):
     orientando = Orientando.query.get_or_404(id)
     
