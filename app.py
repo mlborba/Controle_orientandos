@@ -281,6 +281,7 @@ def novo_orientando():
     return render_template('orientandos/novo.html', orientandos_disponiveis=orientandos_disponiveis)
 
 @app.route('/orientacoes/<int:id>')
+@login_required
 def visualizar_orientacao(id):
     try:
         orientacao = Orientacao.query.get_or_404(id)
