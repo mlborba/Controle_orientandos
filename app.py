@@ -280,18 +280,18 @@ def novo_orientando():
     orientandos_disponiveis = Orientando.query.filter_by(tipo='orientando').all()
     return render_template('orientandos/novo.html', orientandos_disponiveis=orientandos_disponiveis)
 
-@app.route('/orientandos/<int:id>')
-def visualizar_orientando(id):
-    orientando = Orientando.query.get_or_404(id)
-    marcos = Marco.query.filter_by(orientando_id=id).order_by(Marco.data_prevista).all()
-    orientacoes = Orientacao.query.filter_by(orientando_id=id).order_by(Orientacao.data_hora.desc()).all()
-    
-    return render_template(
-        'orientandos/visualizar.html',
-        orientando=orientando,
-        marcos=marcos,
-        orientacoes=orientacoes
-    )
+@app.route('/orientacoes/<int:id>')
+def visualizar_orientacao(id):
+    try:
+        orientacao = Orientacao.query.get_or_404(id)
+        return render_template('orientacoes/visualizar.html', orientacao=orientacao)
+    except Exception as e:
+        import traceback
+        app.logger.error(f"Erro ao visualizar orientação {id}: {str(e)}")
+        app.logger.error(traceback.format_exc())
+        flash(f"Erro ao visualizar orientação: {str(e)}", "danger")
+        return redirect(url_for('listar_orientacoes'))
+
 
 @app.route('/orientandos/<int:id>/editar', methods=['GET', 'POST'])
 def editar_orientando(id):
@@ -444,34 +444,61 @@ def editar_orientacao(id):
 def registrar_diario(id):
     orientacao = Orientacao.query.get_or_404(id)
     
-    # Verificar se já existe um diário para esta orientação
-    diario = DiarioOrientacao.query.filter_by(orientacao_id=id).first()
-    if not diario:
-        diario = DiarioOrientacao(orientacao_id=id)
-    
     if request.method == 'POST':
-        diario.topicos_discutidos = request.form.get('topicos_discutidos')
-        diario.progresso_observado = request.form.get('progresso_observado')
-        diario.pendencias = request.form.get('pendencias')
-        diario.tarefas_atribuidas = request.form.get('tarefas_atribuidas')
-        
-        prazo = request.form.get('prazo_proximas_entregas')
-        if prazo:
-            diario.prazo_proximas_entregas = datetime.strptime(prazo, '%Y-%m-%d').date()
-        
-        diario.avaliacao_progresso = request.form.get('avaliacao_progresso')
-        
-        # Se é um novo diário, adicione ao banco de dados
-        if not diario.id:
-            db.session.add(diario)
-        
-        # Atualizar status da orientação para 'realizada'
-        orientacao.status = 'realizada'
-        
-        db.session.commit()
-        flash('Diário de orientação registrado com sucesso!')
-        return redirect(url_for('visualizar_orientacao', id=id))
+        try:
+            # Verificar se já existe um diário para esta orientação
+            diario_existente = DiarioOrientacao.query.filter_by(orientacao_id=id).first()
+            
+            if diario_existente:
+                # Atualizar diário existente
+                diario_existente.topicos_discutidos = request.form.get('topicos_discutidos', '')
+                diario_existente.progresso_observado = request.form.get('progresso_observado', '')
+                diario_existente.pendencias = request.form.get('pendencias', '')
+                diario_existente.tarefas_atribuidas = request.form.get('tarefas_atribuidas', '')
+                
+                # Tratar o campo de data corretamente
+                prazo_str = request.form.get('prazo_proximas_entregas')
+                if prazo_str and prazo_str.strip():
+                    diario_existente.prazo_proximas_entregas = datetime.strptime(prazo_str, '%Y-%m-%d').date()
+                else:
+                    diario_existente.prazo_proximas_entregas = None
+                    
+                diario_existente.avaliacao_progresso = request.form.get('avaliacao_progresso', '')
+            else:
+                # Criar novo diário
+                prazo_str = request.form.get('prazo_proximas_entregas')
+                prazo_date = None
+                if prazo_str and prazo_str.strip():
+                    prazo_date = datetime.strptime(prazo_str, '%Y-%m-%d').date()
+                
+                diario = DiarioOrientacao(
+                    orientacao_id=id,
+                    topicos_discutidos=request.form.get('topicos_discutidos', ''),
+                    progresso_observado=request.form.get('progresso_observado', ''),
+                    pendencias=request.form.get('pendencias', ''),
+                    tarefas_atribuidas=request.form.get('tarefas_atribuidas', ''),
+                    prazo_proximas_entregas=prazo_date,
+                    avaliacao_progresso=request.form.get('avaliacao_progresso', '')
+                )
+                db.session.add(diario)
+            
+            # Atualizar status da orientação
+            orientacao.status = 'realizada'
+            
+            db.session.commit()
+            flash('Diário registrado com sucesso!', 'success')
+            return redirect(url_for('visualizar_orientacao', id=id))
+            
+        except Exception as e:
+            db.session.rollback()
+            import traceback
+            app.logger.error(f"Erro ao registrar diário: {str(e)}")
+            app.logger.error(traceback.format_exc())
+            flash(f"Erro ao registrar diário: {str(e)}", "danger")
+            return render_template('orientacoes/registrar_diario.html', orientacao=orientacao)
     
+    # GET: exibir formulário
+    diario = DiarioOrientacao.query.filter_by(orientacao_id=id).first()
     return render_template('orientacoes/registrar_diario.html', orientacao=orientacao, diario=diario)
 
 # Inicialização do banco de dados
