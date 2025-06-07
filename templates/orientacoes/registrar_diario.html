@@ -1,82 +1,23 @@
-{% extends 'base.html' %}
-
-{% block title %}Registrar Diário de Orientação - Sistema de Controle de Orientandos{% endblock %}
-
-{% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Registrar Diário de Orientação</h1>
-    <a href="{{ url_for('visualizar_orientacao', id=orientacao.id) }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-left mr-1"></i> Voltar
-    </a>
-</div>
-
-<div class="card mb-4">
-    <div class="card-header">
-        <i class="fas fa-info-circle mr-2"></i> Informações da Orientação
-    </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <p><strong>Orientando:</strong> {{ orientacao.orientando.nome }}</p>
-                <p><strong>Data/Hora:</strong> {{ orientacao.data_hora.strftime('%d/%m/%Y %H:%M') }}</p>
-            </div>
-            <div class="col-md-6">
-                <p><strong>Modalidade:</strong> {{ orientacao.modalidade }}</p>
-                <p><strong>Local/Link:</strong> {{ orientacao.local }}</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="card">
-    <div class="card-header bg-success text-white">
-        <i class="fas fa-book mr-2"></i> Diário de Orientação
-    </div>
-    <div class="card-body">
-        <form method="POST">
-            <div class="form-group">
-                <label for="topicos_discutidos">Tópicos Discutidos</label>
-                <textarea class="form-control" id="topicos_discutidos" name="topicos_discutidos" rows="3" required>{{ diario.topicos_discutidos }}</textarea>
-                <small class="form-text text-muted">Descreva os principais assuntos abordados durante a orientação.</small>
-            </div>
-            
-            <div class="form-group">
-                <label for="progresso_observado">Progresso Observado</label>
-                <textarea class="form-control" id="progresso_observado" name="progresso_observado" rows="3" required>{{ diario.progresso_observado }}</textarea>
-                <small class="form-text text-muted">Descreva o progresso do orientando desde a última orientação.</small>
-            </div>
-            
-            <div class="form-group">
-                <label for="pendencias">Pendências Identificadas</label>
-                <textarea class="form-control" id="pendencias" name="pendencias" rows="3">{{ diario.pendencias }}</textarea>
-                <small class="form-text text-muted">Liste as pendências ou problemas identificados que precisam ser resolvidos.</small>
-            </div>
-            
-            <div class="form-group">
-                <label for="tarefas_atribuidas">Tarefas Atribuídas</label>
-                <textarea class="form-control" id="tarefas_atribuidas" name="tarefas_atribuidas" rows="3" required>{{ diario.tarefas_atribuidas }}</textarea>
-                <small class="form-text text-muted">Liste as tarefas atribuídas ao orientando para a próxima orientação.</small>
-            </div>
-            
-            <div class="form-group">
-                <label for="prazo_proximas_entregas">Prazo para Próximas Entregas</label>
-                <input type="date" class="form-control" id="prazo_proximas_entregas" name="prazo_proximas_entregas" 
-                    {% if diario.prazo_proximas_entregas %}value="{{ diario.prazo_proximas_entregas.strftime('%Y-%m-%d') }}"{% endif %}>
-            </div>
-            
-            <div class="form-group">
-                <label for="avaliacao_progresso">Avaliação do Progresso</label>
-                <select class="form-control" id="avaliacao_progresso" name="avaliacao_progresso" required>
-                    <option value="">Selecione uma avaliação</option>
-                    <option value="excelente" {% if diario.avaliacao_progresso == 'excelente' %}selected{% endif %}>Excelente</option>
-                    <option value="bom" {% if diario.avaliacao_progresso == 'bom' %}selected{% endif %}>Bom</option>
-                    <option value="regular" {% if diario.avaliacao_progresso == 'regular' %}selected{% endif %}>Regular</option>
-                    <option value="insuficiente" {% if diario.avaliacao_progresso == 'insuficiente' %}selected{% endif %}>Insuficiente</option>
-                </select>
-            </div>
-            
-            <button type="submit" class="btn btn-success">Salvar Diário</button>
-        </form>
-    </div>
-</div>
+{% extends 'base.html' %} {% block title %}Registrar DiÃ¡rio de OrientaÃ§Ã£o - Sistema de Controle de Orientandos{% endblock %} {% block content %}
+Registrar DiÃ¡rio de OrientaÃ§Ã£o
+Voltar
+InformaÃ§Ãµes da OrientaÃ§Ã£o
+Orientando: {{ orientacao.orientando.nome }}
+Data/Hora: {{ orientacao.data_hora.strftime('%d/%m/%Y %H:%M') }}
+Modalidade: {{ orientacao.modalidade }}
+Local/Link: {{ orientacao.local }}
+DiÃ¡rio de OrientaÃ§Ã£o
+TÃ³picos Discutidos {{ diario.topicos_discutidos }} Descreva os principais assuntos abordados durante a orientaÃ§Ã£o.
+Progresso Observado {{ diario.progresso_observado }} Descreva o progresso do orientando desde a Ãºltima orientaÃ§Ã£o.
+PendÃªncias Identificadas {{ diario.pendencias }} Liste as pendÃªncias ou problemas identificados que precisam ser resolvidos.
+Tarefas AtribuÃ­das {{ diario.tarefas_atribuidas }} Liste as tarefas atribuÃ­das ao orientando para a prÃ³xima orientaÃ§Ã£o.
+Prazo para PrÃ³ximas Entregas
+AvaliaÃ§Ã£o do Progresso
+                    Selecione uma avaliaÃ§Ã£o
+                    Excelente
+                    Bom
+                    Regular
+                    Insuficiente
+                
+Salvar DiÃ¡rio
 {% endblock %}
