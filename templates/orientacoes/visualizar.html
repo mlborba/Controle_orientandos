@@ -1,33 +1,137 @@
-{% extends 'base.html' %} {% block title %}Detalhes da OrientaÃ§Ã£o - Sistema de Controle de Orientandos{% endblock %} {% block content %}
-Detalhes da OrientaÃ§Ã£o
-Editar {% if orientacao.status == 'agendada' %} Registrar DiÃ¡rio {% endif %} Voltar
-InformaÃ§Ãµes da OrientaÃ§Ã£o
-Orientando: {{ orientacao.orientando.nome }}
-Data/Hora: {{ orientacao.data_hora.strftime('%d/%m/%Y %H:%M') }}
-DuraÃ§Ã£o Prevista: {{ orientacao.duracao_prevista }} minutos
-Status: {% if orientacao.status == 'agendada' %} Agendada {% elif orientacao.status == 'realizada' %} Realizada {% else %} Cancelada {% endif %}
-Modalidade: {{ orientacao.modalidade }}
-Local/Link: {{ orientacao.local }}
-{% if orientacao.diario %}
-DiÃ¡rio de OrientaÃ§Ã£o
-TÃ³picos Discutidos
-{{ orientacao.diario.topicos_discutidos|nl2br|default('NÃ£o registrado', true) }}
-Progresso Observado
-{{ orientacao.diario.progresso_observado|nl2br|default('NÃ£o registrado', true) }}
-PendÃªncias Identificadas
-{{ orientacao.diario.pendencias|nl2br|default('NÃ£o registrado', true) }}
-Tarefas AtribuÃ­das
-{{ orientacao.diario.tarefas_atribuidas|nl2br|default('NÃ£o registrado', true) }}
-{% if orientacao.diario.prazo_proximas_entregas %}
-Prazo para PrÃ³ximas Entregas
-{{ orientacao.diario.prazo_proximas_entregas.strftime('%d/%m/%Y') }}
-{% endif %}
-AvaliaÃ§Ã£o do Progresso
-{% if orientacao.diario.avaliacao_progresso == 'excelente' %} Excelente {% elif orientacao.diario.avaliacao_progresso == 'bom' %} Bom {% elif orientacao.diario.avaliacao_progresso == 'regular' %} Regular {% elif orientacao.diario.avaliacao_progresso == 'insuficiente' %} Insuficiente {% else %} NÃ£o avaliado {% endif %}
-Editar DiÃ¡rio
-{% else %}
-DiÃ¡rio de OrientaÃ§Ã£o
-Nenhum diÃ¡rio registrado para esta orientaÃ§Ã£o.
-{% if orientacao.status == 'agendada' %} Registrar DiÃ¡rio {% endif %}
-{% endif %}
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>Detalhes da Orientação</h2>
+                <div>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary me-2">
+                        <i class="fas fa-arrow-left"></i> Voltar para Dashboard
+                    </a>
+                    <a href="{{ url_for('listar_orientacoes') }}" class="btn btn-secondary">
+                        <i class="fas fa-list"></i> Todas as Orientações
+                    </a>
+                </div>
+            </div>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Informações da Orientação</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Orientando:</strong> <a href="{{ url_for('visualizar_orientando', id=orientacao.orientando.id) }}">{{ orientacao.orientando.nome }}</a></p>
+                            <p><strong>Data/Hora:</strong> {{ orientacao.data_hora.strftime('%d/%m/%Y %H:%M') }}</p>
+                            <p><strong>Duração Prevista:</strong> {{ orientacao.duracao_prevista }} minutos</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Modalidade:</strong> {{ orientacao.modalidade }}</p>
+                            <p><strong>Local:</strong> {{ orientacao.local }}</p>
+                            <p><strong>Status:</strong> 
+                                <span class="badge {% if orientacao.status == 'agendada' %}bg-primary{% elif orientacao.status == 'realizada' %}bg-success{% elif orientacao.status == 'cancelada' %}bg-danger{% endif %}">
+                                    {{ orientacao.status }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        {% if orientacao.status == 'agendada' %}
+                            <a href="{{ url_for('registrar_diario', id=orientacao.id) }}" class="btn btn-primary">
+                                <i class="fas fa-edit"></i> Registrar Diário
+                            </a>
+                            <a href="{{ url_for('editar_orientacao', id=orientacao.id) }}" class="btn btn-warning">
+                                <i class="fas fa-pencil-alt"></i> Editar Orientação
+                            </a>
+                        {% elif orientacao.status == 'realizada' and not orientacao.diario %}
+                            <a href="{{ url_for('registrar_diario', id=orientacao.id) }}" class="btn btn-primary">
+                                <i class="fas fa-edit"></i> Registrar Diário
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            {% if orientacao.diario %}
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5>Diário de Orientação</h5>
+                        <a href="{{ url_for('registrar_diario', id=orientacao.id) }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-edit"></i> Editar Diário
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <h6>Tópicos Discutidos</h6>
+                            <p>{{ orientacao.diario.topicos_discutidos or 'Não informado' }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6>Progresso Observado</h6>
+                            <p>{{ orientacao.diario.progresso_observado or 'Não informado' }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6>Pendências</h6>
+                            <p>{{ orientacao.diario.pendencias or 'Não informado' }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6>Tarefas Atribuídas</h6>
+                            <p>{{ orientacao.diario.tarefas_atribuidas or 'Não informado' }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6>Prazo para Próximas Entregas</h6>
+                            <p>
+                                {% if orientacao.diario.prazo_proximas_entregas %}
+                                    {{ orientacao.diario.prazo_proximas_entregas.strftime('%d/%m/%Y') }}
+                                {% else %}
+                                    Não definido
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6>Avaliação do Progresso</h6>
+                            <p>
+                                {% if orientacao.diario.avaliacao_progresso == 'excelente' %}
+                                    <span class="badge bg-success">Excelente</span>
+                                {% elif orientacao.diario.avaliacao_progresso == 'bom' %}
+                                    <span class="badge bg-primary">Bom</span>
+                                {% elif orientacao.diario.avaliacao_progresso == 'regular' %}
+                                    <span class="badge bg-warning">Regular</span>
+                                {% elif orientacao.diario.avaliacao_progresso == 'insuficiente' %}
+                                    <span class="badge bg-danger">Insuficiente</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Não avaliado</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                {% if orientacao.status == 'realizada' %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Esta orientação foi marcada como realizada, mas ainda não possui um diário registrado.
+                        <a href="{{ url_for('registrar_diario', id=orientacao.id) }}" class="btn btn-sm btn-primary ms-2">
+                            Registrar Diário
+                        </a>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock %}
