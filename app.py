@@ -2,33 +2,24 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, timedelta  # Certifique-se que este import existe
+from datetime import datetime, timedelta
 import os
 from dateutil.relativedelta import relativedelta
 
 # Configuração do aplicativo
 app = Flask(__name__)
-app.instance_path = '/tmp/instance_orientacao'
+app.instance_path = '/tmp/instance_orientacao'  # Corrige o erro de sistema de arquivos somente leitura no Vercel
 app.config['SECRET_KEY'] = os.urandom(24)
-# Adicione estas linhas logo após a configuração do SECRET_KEY no app.py:
 
-# Configuração mais robusta para sessões
-app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
-app.config['SESSION_PERMANENT'] = True
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Sessão válida por 7 dias
-
-# Substitua a linha atual de configuração do banco de dados por:
-database_url = os.environ.get('DATABASE_URL')
-if not database_url:
-    # Fallback para SQLite apenas em desenvolvimento local
-    database_url = 'sqlite:////tmp/instance_orientacao/orientacao.db'
-    print("AVISO: Usando SQLite local. Para produção, configure DATABASE_URL.")
+# Configuração do banco de dados
+# Verificar se existe variável de ambiente DATABASE_URL (para o Vercel)
+if os.environ.get('DATABASE_URL'):
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+    print("Usando banco de dados configurado via DATABASE_URL")
+    print(f"URL do banco de dados configurada: {os.environ.get('DATABASE_URL')}")
 else:
-    print(f"Usando banco de dados configurado via DATABASE_URL")
-
-app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-print(f"URL do banco de dados configurada: {app.config['SQLALCHEMY_DATABASE_URI']}")
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///orientacao.db'
+    print("Usando banco de dados SQLite local")
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -44,7 +35,7 @@ login_manager.login_view = 'login'
 class Usuario(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256))  # Aumentado para 256 caracteres
+    password_hash = db.Column(db.String(128))
     nome = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     
@@ -134,10 +125,9 @@ def login():
         
         if user and user.check_password(password):
             login_user(user)
-            session.permanent = True  # Torna a sessão permanente
             return redirect(url_for('dashboard'))
-        else:
-            flash('Usuário ou senha inválidos', 'danger')
+        
+        flash('Usuário ou senha inválidos')
     
     return render_template('login.html')
 
@@ -150,57 +140,47 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    try:
-        # Adicione esta linha para definir 'now'
-        hoje = datetime.now()
-        
-        # Contagem de orientandos por tipo
-        orientandos = Orientando.query.filter_by(tipo='orientando', status='ativo').count()
-        coorientandos = Orientando.query.filter_by(tipo='coorientando', status='ativo').count()
-        
-        # Próximas orientações
-        proximas_orientacoes = Orientacao.query.filter(
-            Orientacao.data_hora >= hoje,
-            Orientacao.status == 'agendada'
-        ).order_by(Orientacao.data_hora).limit(5).all()
-        
-        # Próximos marcos
-        proximos_marcos = Marco.query.filter(
-            Marco.data_prevista >= hoje.date(),
-            Marco.status == 'pendente'
-        ).order_by(Marco.data_prevista).limit(5).all()
-        
-        # Marcos atrasados
-        marcos_atrasados = Marco.query.filter(
-            Marco.data_prevista < hoje.date(),
-            Marco.status == 'pendente'
-        ).order_by(Marco.data_prevista).all()
-        
-        return render_template(
-            'dashboard.html',
-            orientandos=orientandos,
-            coorientandos=coorientandos,
-            proximas_orientacoes=proximas_orientacoes,
-            proximos_marcos=proximos_marcos,
-            marcos_atrasados=marcos_atrasados,
-            now=hoje  # Adicione esta linha para passar 'now' para o template
-        )
-    except Exception as e:
-        # Log detalhado do erro
-        import traceback
-        app.logger.error(f"Erro no dashboard: {str(e)}")
-        app.logger.error(traceback.format_exc())
-        
-        # Retornar uma página de erro mais amigável
-        return render_template('login.html', error="Erro ao carregar o dashboard. Por favor, tente novamente mais tarde.")
+    # Contagem de orientandos por tipo
+    orientandos = Orientando.query.filter_by(tipo='orientando', status='ativo').count()
+    coorientandos = Orientando.query.filter_by(tipo='coorientando', status='ativo').count()
+    
+    # Próximas orientações
+    hoje = datetime.now()
+    proximas_orientacoes = Orientacao.query.filter(
+        Orientacao.data_hora >= hoje,
+        Orientacao.status == 'agendada'
+    ).order_by(Orientacao.data_hora).limit(5).all()
+    
+    # Próximos marcos
+    proximos_marcos = Marco.query.filter(
+        Marco.data_prevista >= hoje.date(),
+        Marco.status == 'pendente'
+    ).order_by(Marco.data_prevista).limit(5).all()
+    
+    # Marcos atrasados
+    marcos_atrasados = Marco.query.filter(
+        Marco.data_prevista < hoje.date(),
+        Marco.status == 'pendente'
+    ).order_by(Marco.data_prevista).all()
+    
+    return render_template(
+        'dashboard.html',
+        orientandos=orientandos,
+        coorientandos=coorientandos,
+        proximas_orientacoes=proximas_orientacoes,
+        proximos_marcos=proximos_marcos,
+        marcos_atrasados=marcos_atrasados
+    )
 
 # Rotas para Orientandos
 @app.route('/orientandos')
+@login_required
 def listar_orientandos():
     orientandos = Orientando.query.all()
     return render_template('orientandos/listar.html', orientandos=orientandos)
 
 @app.route('/orientandos/novo', methods=['GET', 'POST'])
+@login_required
 def novo_orientando():
     if request.method == 'POST':
         nome = request.form.get('nome')
@@ -280,21 +260,22 @@ def novo_orientando():
     orientandos_disponiveis = Orientando.query.filter_by(tipo='orientando').all()
     return render_template('orientandos/novo.html', orientandos_disponiveis=orientandos_disponiveis)
 
-@app.route('/orientacoes/<int:id>')
+@app.route('/orientandos/<int:id>')
 @login_required
-def visualizar_orientacao(id):
-    try:
-        orientacao = Orientacao.query.get_or_404(id)
-        return render_template('orientacoes/visualizar.html', orientacao=orientacao)
-    except Exception as e:
-        import traceback
-        app.logger.error(f"Erro ao visualizar orientação {id}: {str(e)}")
-        app.logger.error(traceback.format_exc())
-        flash(f"Erro ao visualizar orientação: {str(e)}", "danger")
-        return redirect(url_for('listar_orientacoes'))
-
+def visualizar_orientando(id):
+    orientando = Orientando.query.get_or_404(id)
+    marcos = Marco.query.filter_by(orientando_id=id).order_by(Marco.data_prevista).all()
+    orientacoes = Orientacao.query.filter_by(orientando_id=id).order_by(Orientacao.data_hora.desc()).all()
+    
+    return render_template(
+        'orientandos/visualizar.html',
+        orientando=orientando,
+        marcos=marcos,
+        orientacoes=orientacoes
+    )
 
 @app.route('/orientandos/<int:id>/editar', methods=['GET', 'POST'])
+@login_required
 def editar_orientando(id):
     orientando = Orientando.query.get_or_404(id)
     
@@ -321,13 +302,45 @@ def editar_orientando(id):
     orientandos_disponiveis = Orientando.query.filter_by(tipo='orientando').all()
     return render_template('orientandos/editar.html', orientando=orientando, orientandos_disponiveis=orientandos_disponiveis)
 
+# Rota para excluir orientando
+@app.route('/orientandos/<int:id>/excluir', methods=['POST'])
+@login_required
+def excluir_orientando(id):
+    orientando = Orientando.query.get_or_404(id)
+    
+    # Verificar se o orientando é orientador principal de algum coorientando
+    coorientandos_associados = Orientando.query.filter_by(orientador_principal_id=id).count()
+    if coorientandos_associados > 0:
+        flash('Não é possível excluir este orientando, pois ele é orientador principal de um ou mais coorientandos. Remova a associação primeiro.', 'danger')
+        return redirect(url_for('listar_orientandos'))
+        
+    try:
+        # Excluir marcos associados
+        Marco.query.filter_by(orientando_id=id).delete()
+        # Excluir diários de orientação associados (indireto, via orientação)
+        orientacoes = Orientacao.query.filter_by(orientando_id=id).all()
+        for orientacao in orientacoes:
+            DiarioOrientacao.query.filter_by(orientacao_id=orientacao.id).delete()
+        # Excluir orientações associadas
+        Orientacao.query.filter_by(orientando_id=id).delete()
+        
+        db.session.delete(orientando)
+        db.session.commit()
+        flash('Orientando e todos os seus dados relacionados foram excluídos com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao excluir o orientando: {str(e)}', 'danger')
+    return redirect(url_for('listar_orientandos'))
+
 # Rotas para Marcos
 @app.route('/marcos')
+@login_required
 def listar_marcos():
     marcos = Marco.query.order_by(Marco.data_prevista).all()
     return render_template('marcos/listar.html', marcos=marcos)
 
 @app.route('/marcos/novo', methods=['GET', 'POST'])
+@login_required
 def novo_marco():
     if request.method == 'POST':
         orientando_id = request.form.get('orientando_id')
@@ -352,6 +365,7 @@ def novo_marco():
     return render_template('marcos/novo.html', orientandos=orientandos)
 
 @app.route('/marcos/<int:id>/editar', methods=['GET', 'POST'])
+@login_required
 def editar_marco(id):
     marco = Marco.query.get_or_404(id)
     
@@ -381,13 +395,29 @@ def editar_marco(id):
     orientandos = Orientando.query.all()
     return render_template('marcos/editar.html', marco=marco, orientandos=orientandos)
 
+# Rota para excluir marco
+@app.route('/marcos/<int:id>/excluir', methods=['POST'])
+@login_required
+def excluir_marco(id):
+    marco = Marco.query.get_or_404(id)
+    try:
+        db.session.delete(marco)
+        db.session.commit()
+        flash('Marco excluído com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao excluir o marco: {str(e)}', 'danger')
+    return redirect(url_for('listar_marcos'))
+
 # Rotas para Orientações
 @app.route('/orientacoes')
+@login_required
 def listar_orientacoes():
     orientacoes = Orientacao.query.order_by(Orientacao.data_hora.desc()).all()
     return render_template('orientacoes/listar.html', orientacoes=orientacoes)
 
 @app.route('/orientacoes/nova', methods=['GET', 'POST'])
+@login_required
 def nova_orientacao():
     if request.method == 'POST':
         orientando_id = request.form.get('orientando_id')
@@ -415,12 +445,22 @@ def nova_orientacao():
     orientandos = Orientando.query.filter_by(status='ativo').all()
     return render_template('orientacoes/nova.html', orientandos=orientandos)
 
+# VERSÃO CORRIGIDA - Visualizar orientação com tratamento de erro
 @app.route('/orientacoes/<int:id>')
+@login_required
 def visualizar_orientacao(id):
-    orientacao = Orientacao.query.get_or_404(id)
-    return render_template('orientacoes/visualizar.html', orientacao=orientacao)
+    try:
+        orientacao = Orientacao.query.get_or_404(id)
+        return render_template('orientacoes/visualizar.html', orientacao=orientacao)
+    except Exception as e:
+        import traceback
+        app.logger.error(f"Erro ao visualizar orientação {id}: {str(e)}")
+        app.logger.error(traceback.format_exc())
+        flash(f"Erro ao visualizar orientação: {str(e)}", "danger")
+        return redirect(url_for('listar_orientacoes'))
 
 @app.route('/orientacoes/<int:id>/editar', methods=['GET', 'POST'])
+@login_required
 def editar_orientacao(id):
     orientacao = Orientacao.query.get_or_404(id)
     
@@ -441,7 +481,9 @@ def editar_orientacao(id):
     orientandos = Orientando.query.filter_by(status='ativo').all()
     return render_template('orientacoes/editar.html', orientacao=orientacao, orientandos=orientandos)
 
+# VERSÃO CORRIGIDA - Registrar diário com tratamento de erro
 @app.route('/orientacoes/<int:id>/registrar', methods=['GET', 'POST'])
+@login_required
 def registrar_diario(id):
     orientacao = Orientacao.query.get_or_404(id)
     
@@ -503,33 +545,24 @@ def registrar_diario(id):
     return render_template('orientacoes/registrar_diario.html', orientacao=orientacao, diario=diario)
 
 # Inicialização do banco de dados
-@app.route("/init-db-manual")
-def init_db_manual():
-    try:
-        with app.app_context():
-            print("Tentando criar tabelas...")
-            db.create_all()
-            print("Tabelas criadas. Tentando criar admin...")
-            
-            # Criar usuário administrador se não existir
-            admin = Usuario.query.filter_by(username="admin").first()
-            if not admin:
-                admin = Usuario(
-                    username="admin",
-                    nome="Administrador",
-                    email="admin@example.com",
-                )
-                admin.set_password("admin123")
-                db.session.add(admin)
-                db.session.commit()
-                print("Admin criado.")
-                return "Banco de dados inicializado e admin criado!"
-            else:
-                print("Admin já existia.")
-                return "Banco de dados inicializado (admin já existia)!"
-    except Exception as e:
-        print(f"Erro no init_db_manual: {str(e)}")
-        return f"Erro ao inicializar DB: {str(e)}"
+@app.cli.command('init-db')
+def init_db_command():
+    """Inicializa o banco de dados."""
+    db.create_all()
+    
+    # Criar usuário administrador se não existir
+    admin = Usuario.query.filter_by(username='admin').first()
+    if not admin:
+        admin = Usuario(
+            username='admin',
+            nome='Administrador',
+            email='admin@example.com'
+        )
+        admin.set_password('admin123')
+        db.session.add(admin)
+        db.session.commit()
+    
+    print('Banco de dados inicializado.')
 
 if __name__ == '__main__':
     with app.app_context():
@@ -542,51 +575,9 @@ if __name__ == '__main__':
                 nome='Administrador',
                 email='admin@example.com'
             )
-            admin.set_password('Latierra010765')
+            admin.set_password('admin123')
             db.session.add(admin)
             db.session.commit()
             print('Usuário administrador criado.')
     
     app.run(host='0.0.0.0', port=5000, debug=True)
-
-# Adicionar rota para excluir marco
-@app.route('/marcos/<int:id>/excluir', methods=['POST'])
-def excluir_marco(id):
-    marco = Marco.query.get_or_404(id)
-    try:
-        db.session.delete(marco)
-        db.session.commit()
-        flash('Marco excluído com sucesso!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Erro ao excluir o marco: {str(e)}', 'danger')
-    return redirect(url_for('listar_marcos'))
-
-# Adicionar rota para excluir orientando (revisão e garantia)
-@app.route('/orientandos/<int:id>/excluir', methods=['POST'])
-def excluir_orientando(id):
-    orientando = Orientando.query.get_or_404(id)
-    
-    # Verificar se o orientando é orientador principal de algum coorientando
-    coorientandos_associados = Orientando.query.filter_by(orientador_principal_id=id).count()
-    if coorientandos_associados > 0:
-        flash('Não é possível excluir este orientando, pois ele é orientador principal de um ou mais coorientandos. Remova a associação primeiro.', 'danger')
-        return redirect(url_for('listar_orientandos'))
-        
-    try:
-        # Excluir marcos associados
-        Marco.query.filter_by(orientando_id=id).delete()
-        # Excluir diários de orientação associados (indireto, via orientação)
-        orientacoes = Orientacao.query.filter_by(orientando_id=id).all()
-        for orientacao in orientacoes:
-            DiarioOrientacao.query.filter_by(orientacao_id=orientacao.id).delete()
-        # Excluir orientações associadas
-        Orientacao.query.filter_by(orientando_id=id).delete()
-        
-        db.session.delete(orientando)
-        db.session.commit()
-        flash('Orientando e todos os seus dados relacionados foram excluídos com sucesso!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Erro ao excluir o orientando: {str(e)}', 'danger')
-    return redirect(url_for('listar_orientandos'))
