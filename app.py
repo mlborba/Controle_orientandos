@@ -9,7 +9,10 @@ from dateutil.relativedelta import relativedelta
 # Configuração do aplicativo
 app = Flask(__name__)
 app.instance_path = '/tmp/instance_orientacao'  # Corrige o erro de sistema de arquivos somente leitura no Vercel
-app.config['SECRET_KEY'] = os.urandom(24)
+
+# Usar uma SECRET_KEY fixa para manter as sessões entre reinicializações
+app.config['SECRET_KEY'] = 'chave_secreta_fixa_para_sistema_orientacao_2025'  # IMPORTANTE: Usar uma chave fixa
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)  # Sessão dura 1 dia
 
 # Configuração do banco de dados
 # Verificar se existe variável de ambiente DATABASE_URL (para o Vercel)
@@ -124,8 +127,10 @@ def login():
         user = Usuario.query.filter_by(username=username).first()
         
         if user and user.check_password(password):
-            login_user(user)
-            return redirect(url_for('dashboard'))
+            login_user(user, remember=True)  # Usar remember=True para manter a sessão
+            session.permanent = True  # Tornar a sessão permanente
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('dashboard'))
         
         flash('Usuário ou senha inválidos')
     
@@ -544,6 +549,12 @@ def registrar_diario(id):
     # GET: exibir formulário
     diario = DiarioOrientacao.query.filter_by(orientacao_id=id).first()
     return render_template('orientacoes/registrar_diario.html', orientacao=orientacao, diario=diario)
+
+# Rota para verificar status da sessão
+@app.route('/check-session')
+@login_required
+def check_session():
+    return f"Usuário autenticado: {current_user.username}, ID: {current_user.id}"
 
 # Inicialização do banco de dados
 @app.cli.command('init-db')
