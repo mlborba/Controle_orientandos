@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -110,6 +110,13 @@ class DiarioOrientacao(db.Model):
 @login_manager.user_loader
 def load_user(user_id):
     return Usuario.query.get(int(user_id))
+
+# Configuração para garantir que todas as respostas sejam UTF-8
+@app.after_request
+def add_charset_utf8(response):
+    if 'text/html' in response.content_type:
+        response.content_type = 'text/html; charset=utf-8'
+    return response
 
 # Rotas
 @app.route('/')
@@ -460,8 +467,8 @@ def visualizar_orientacao(id):
         return render_template('orientacoes/visualizar.html', orientacao=orientacao)
     except Exception as e:
         import traceback
-        app.logger.error(f"Erro ao visualizar orientação {id}: {str(e)}")
-        app.logger.error(traceback.format_exc())
+        print(f"Erro ao visualizar orientação {id}: {str(e)}")
+        print(traceback.format_exc())
         flash(f"Erro ao visualizar orientação: {str(e)}", "danger")
         return redirect(url_for('listar_orientacoes'))
 
@@ -487,14 +494,14 @@ def editar_orientacao(id):
     orientandos = Orientando.query.filter_by(status='ativo').all()
     return render_template('orientacoes/editar.html', orientacao=orientacao, orientandos=orientandos)
 
-# VERSÃO CORRIGIDA - Registrar diário com tratamento de erro
+# VERSÃO CORRIGIDA - Registrar diário com tratamento de erro e encoding UTF-8
 @app.route('/orientacoes/<int:id>/registrar', methods=['GET', 'POST'])
 @login_required
 def registrar_diario(id):
-    orientacao = Orientacao.query.get_or_404(id)
-    
-    if request.method == 'POST':
-        try:
+    try:
+        orientacao = Orientacao.query.get_or_404(id)
+        
+        if request.method == 'POST':
             # Verificar se já existe um diário para esta orientação
             diario_existente = DiarioOrientacao.query.filter_by(orientacao_id=id).first()
             
@@ -538,17 +545,21 @@ def registrar_diario(id):
             flash('Diário registrado com sucesso!', 'success')
             return redirect(url_for('visualizar_orientacao', id=id))
             
-        except Exception as e:
-            db.session.rollback()
-            import traceback
-            app.logger.error(f"Erro ao registrar diário: {str(e)}")
-            app.logger.error(traceback.format_exc())
-            flash(f"Erro ao registrar diário: {str(e)}", "danger")
-            return render_template('orientacoes/registrar_diario.html', orientacao=orientacao)
-    
-    # GET: exibir formulário
-    diario = DiarioOrientacao.query.filter_by(orientacao_id=id).first()
-    return render_template('orientacoes/registrar_diario.html', orientacao=orientacao, diario=diario)
+        # GET: exibir formulário
+        diario = DiarioOrientacao.query.filter_by(orientacao_id=id).first()
+        
+        # Garantir que a resposta seja UTF-8
+        response = make_response(render_template('orientacoes/registrar_diario.html', orientacao=orientacao, diario=diario))
+        response.headers['Content-Type'] = 'text/html; charset=utf-8'
+        return response
+        
+    except Exception as e:
+        db.session.rollback()
+        import traceback
+        print(f"Erro ao registrar diário: {str(e)}")
+        print(traceback.format_exc())
+        flash(f"Erro ao registrar diário: {str(e)}", "danger")
+        return redirect(url_for('visualizar_orientacao', id=id))
 
 # Rota para verificar status da sessão
 @app.route('/check-session')
