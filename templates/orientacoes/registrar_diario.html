@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrar Diário de Orientação{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Registrar Diário de Orientação</h2>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Informações da Orientação</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Orientando:</strong> {{ orientacao.orientando.nome }}</p>
+                        <p><strong>Data/Hora:</strong> {{ orientacao.data_hora.strftime('%d/%m/%Y %H:%M') }}</p>
+                        <p><strong>Modalidade:</strong> {{ orientacao.modalidade }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Local/Link:</strong> {{ orientacao.local }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5>Diário de Orientação</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="form-group mb-3">
+                        <label for="topicos_discutidos">Tópicos Discutidos</label>
+                        <textarea class="form-control" id="topicos_discutidos" name="topicos_discutidos" rows="3" placeholder="Descreva os principais assuntos abordados durante a orientação.">{{ diario.topicos_discutidos if diario else '' }}</textarea>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="progresso_observado">Progresso Observado</label>
+                        <textarea class="form-control" id="progresso_observado" name="progresso_observado" rows="3" placeholder="Descreva o progresso do orientando desde a última orientação.">{{ diario.progresso_observado if diario else '' }}</textarea>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="pendencias">Pendências Identificadas</label>
+                        <textarea class="form-control" id="pendencias" name="pendencias" rows="3" placeholder="Liste as pendências ou problemas identificados que precisam ser resolvidos.">{{ diario.pendencias if diario else '' }}</textarea>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="tarefas_atribuidas">Tarefas Atribuídas</label>
+                        <textarea class="form-control" id="tarefas_atribuidas" name="tarefas_atribuidas" rows="3" placeholder="Liste as tarefas atribuídas ao orientando para a próxima orientação.">{{ diario.tarefas_atribuidas if diario else '' }}</textarea>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="prazo_proximas_entregas">Prazo para Próximas Entregas</label>
+                        <input type="date" class="form-control" id="prazo_proximas_entregas" name="prazo_proximas_entregas" value="{{ diario.prazo_proximas_entregas.strftime('%Y-%m-%d') if diario and diario.prazo_proximas_entregas else '' }}">
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="avaliacao_progresso">Avaliação do Progresso</label>
+                        <select class="form-control" id="avaliacao_progresso" name="avaliacao_progresso">
+                            <option value="">Selecione uma avaliação</option>
+                            <option value="excelente" {% if diario and diario.avaliacao_progresso == 'excelente' %}selected{% endif %}>Excelente</option>
+                            <option value="bom" {% if diario and diario.avaliacao_progresso == 'bom' %}selected{% endif %}>Bom</option>
+                            <option value="regular" {% if diario and diario.avaliacao_progresso == 'regular' %}selected{% endif %}>Regular</option>
+                            <option value="insuficiente" {% if diario and diario.avaliacao_progresso == 'insuficiente' %}selected{% endif %}>Insuficiente</option>
+                        </select>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('visualizar_orientacao', id=orientacao.id) }}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">Salvar Diário</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
